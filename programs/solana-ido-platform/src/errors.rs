@@ -7,4 +7,8 @@ pub enum ErrorMessage {
 
     #[msg("InvalidPoolTime")]
     InvalidPoolTime,
+    
+    #[msg("InsufficientBalance")]
+    InsufficientBalance,
+    
 }
