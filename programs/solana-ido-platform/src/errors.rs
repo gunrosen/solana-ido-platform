@@ -4,4 +4,7 @@ use anchor_lang::prelude::*;
 pub enum ErrorMessage {
     #[msg("Unauthorized")]
     Unauthorized,
+
+    #[msg("InvalidPoolTime")]
+    InvalidPoolTime,
 }

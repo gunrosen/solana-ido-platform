@@ -56,6 +56,7 @@ pub fn process_create_pool(
     token: Pubkey,
     signer: Pubkey
 ) -> Result<()> {
+    require!(start_time < end_time, ErrorMessage::InvalidPoolTime);
     let pool_account = &mut ctx.accounts.pool_account;
     pool_account.start_time = start_time;
     pool_account.end_time = end_time;
