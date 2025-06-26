@@ -25,9 +25,9 @@ pub mod solana_ido_platform {
         end_time: u64,
         claim_time: u64,
         tokens_for_sale: u64,
-        token_decimals: u8,
+        token_sold: u64,
         token_rate: u64,
-        decimals: u8,
+        token_rate_decimals: u8,
         currency: Pubkey,
         token: Pubkey,
         signer: Pubkey
@@ -38,9 +38,9 @@ pub mod solana_ido_platform {
             end_time,
             claim_time,
             tokens_for_sale,
-            token_decimals,
+            token_sold,
             token_rate,
-            decimals,
+            token_rate_decimals,
             currency,
             token,
             signer
