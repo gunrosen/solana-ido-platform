@@ -6,13 +6,13 @@ pub struct PoolAccount {
     pub start_time: u64,
     pub end_time: u64,
     pub claim_time: u64,
-    pub tokens_for_sale: u64,
-    pub token_sold: u64,
-    pub token_rate: u64,
-    pub token_rate_decimals: u8,
-    pub currency: Pubkey,
-    pub token: Pubkey,
-    pub signer: Pubkey,
+    pub token_for_sale: u64, // total sales
+    pub token_sold: u64,     // currently sold
+    pub token_rate: u64,     // conversion rate
+    pub token_rate_decimals: u8, // conversion rate
+    pub currency: Pubkey,    // usdt
+    pub token: Pubkey,       // SPL token 
+    pub signer: Pubkey,      // control allocation
 }
 
 impl PoolAccount {

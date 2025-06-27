@@ -11,7 +11,7 @@ use crate::{
     start_time: u64,
     end_time: u64,
     claim_time: u64,
-    tokens_for_sale: u64,
+    token_for_sale: u64,
     token_sold: u64,
     token_rate: u64,
     token_rate_decimals: u8,
@@ -48,7 +48,7 @@ pub fn process_create_pool(
     start_time: u64,
     end_time: u64,
     claim_time: u64,
-    tokens_for_sale: u64,
+    token_for_sale: u64,
     token_sold: u64,
     token_rate: u64,
     token_rate_decimals: u8,
@@ -61,7 +61,7 @@ pub fn process_create_pool(
     pool_account.start_time = start_time;
     pool_account.end_time = end_time;
     pool_account.claim_time = claim_time;
-    pool_account.tokens_for_sale = tokens_for_sale;
+    pool_account.token_for_sale = token_for_sale;
     pool_account.token_sold = token_sold;
     pool_account.token_rate = token_rate;
     pool_account.token_rate_decimals = token_rate_decimals;
