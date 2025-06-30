@@ -17,7 +17,8 @@ use crate::{
     token_rate_decimals: u8,
     currency: Pubkey,
     token: Pubkey,
-    signer: Pubkey
+    signer: Pubkey,
+    receiver: Pubkey,
 )]
 pub struct CreatePool<'info> {
     #[account(mut)]
@@ -54,7 +55,8 @@ pub fn process_create_pool(
     token_rate_decimals: u8,
     currency: Pubkey,
     token: Pubkey,
-    signer: Pubkey
+    signer: Pubkey,
+    receiver: Pubkey,
 ) -> Result<()> {
     require!(start_time < end_time, ErrorMessage::InvalidPoolTime);
     let pool_account = &mut ctx.accounts.pool_account;
@@ -68,5 +70,6 @@ pub fn process_create_pool(
     pool_account.currency = currency.key();
     pool_account.token = token.key();
     pool_account.signer = signer.key();
+    pool_account.receiver = receiver.key();
     Ok(())
 }

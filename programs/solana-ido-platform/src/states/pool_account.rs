@@ -13,6 +13,7 @@ pub struct PoolAccount {
     pub currency: Pubkey,    // usdt
     pub token: Pubkey,       // SPL token 
     pub signer: Pubkey,      // control allocation
+    pub receiver: Pubkey,    // wallet will be received usdt
 }
 
 impl PoolAccount {

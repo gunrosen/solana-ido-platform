@@ -30,7 +30,8 @@ pub mod solana_ido_platform {
         token_rate_decimals: u8,
         currency: Pubkey,
         token: Pubkey,
-        signer: Pubkey
+        signer: Pubkey,
+        receiver: Pubkey
     ) -> Result<()> {
         process_create_pool(
             ctx,
@@ -43,7 +44,8 @@ pub mod solana_ido_platform {
             token_rate_decimals,
             currency,
             token,
-            signer
+            signer,
+            receiver
         )
     }
 }
