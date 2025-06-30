@@ -107,7 +107,7 @@ describe("solana-ido-platform", () => {
         const wrongStartTime = endTime + 10_000;
         await program.methods
           .createPool(
-            new anchor.BN(startTime),
+            new anchor.BN(wrongStartTime),
             new anchor.BN(endTime),
             new anchor.BN(claimTime),
             new anchor.BN(tokenForSale),
@@ -130,7 +130,7 @@ describe("solana-ido-platform", () => {
     });
     it("Should create pool successfully", async () => {
       try {
-        await program.methods
+        const tx = await program.methods
           .createPool(
             new anchor.BN(startTime),
             new anchor.BN(endTime),
@@ -147,6 +147,8 @@ describe("solana-ido-platform", () => {
           .accounts({signer: creator.publicKey})
           .signers([creator])
           .rpc();
+        await sleep(1);
+
       } catch (error) {
         console.log(error);
       }
