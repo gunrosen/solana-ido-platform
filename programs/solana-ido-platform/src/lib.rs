@@ -1,13 +1,15 @@
 use anchor_lang::prelude::*;
-pub mod instructions;
-pub mod states;
 pub mod constants;
 pub mod errors;
+pub mod events;
+pub mod instructions;
+pub mod states;
 
-pub use instructions::{ initialize::* , create_pool::*};
-pub use states::*;
 pub use constants::*;
 pub use errors::*;
+pub use events::*;
+pub use instructions::{buy_token::*, create_pool::*, initialize::*};
+pub use states::*;
 
 declare_id!("9ghHF9QjUqzR9RLMasz6niBTQyCD6TMpc85yy1g2ioo6");
 
@@ -16,7 +18,7 @@ pub mod solana_ido_platform {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, owner: Pubkey, creator: Pubkey) -> Result<()> {
-         process_initialize(ctx, owner, creator)
+        process_initialize(ctx, owner, creator)
     }
 
     pub fn create_pool(
@@ -31,7 +33,7 @@ pub mod solana_ido_platform {
         currency: Pubkey,
         token: Pubkey,
         signer: Pubkey,
-        receiver: Pubkey
+        receiver: Pubkey,
     ) -> Result<()> {
         process_create_pool(
             ctx,
@@ -45,7 +47,17 @@ pub mod solana_ido_platform {
             currency,
             token,
             signer,
-            receiver
+            receiver,
         )
+    }
+
+    pub fn buy_token(ctx: Context<BuyToken>, amount: u64) -> Result<()> {
+        let (buyer, token, amount) = process_buy_token(ctx, amount)?;
+        emit!(BuyTokenEvent {
+            buyer,
+            token,
+            amount,
+        });
+        Ok(())
     }
 }

@@ -11,4 +11,15 @@ pub enum ErrorMessage {
     #[msg("InsufficientBalance")]
     InsufficientBalance,
     
+    #[msg("SaleNotStartedYet")]
+    SaleNotStartedYet,
+
+    #[msg("SaleEnded")]
+    SaleEnded,
+
+    #[msg("BuyMoreThanAllowed")]
+    BuyMoreThanAllowed,
+
+    #[msg("NotEnoughTokenToBuy")]
+    NotEnoughTokenToBuy,
 }
