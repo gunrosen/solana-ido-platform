@@ -1,25 +1,36 @@
+use std::sync::mpsc::Receiver;
 use crate::{
-    pool_account::PoolAccount, user_account::UserAccount, ErrorMessage, CONFIG_SEED, POOL_SEED,
+    pool_account::PoolAccount, user_account::UserAccount, ErrorMessage, POOL_SEED,
     USER_ACCOUNT_SEED,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar::clock;
-use anchor_spl::token_interface::{self, TokenInterface, TransferChecked};
+use anchor_spl::token_interface::{self, TransferChecked};
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{self, Mint, Token, TokenAccount, Transfer},
+    token::{Mint, Token, TokenAccount, Transfer},
 };
 
 #[derive(Accounts)]
-#[instruction(amount: u64, bought_token_mint: Pubkey)]
 pub struct BuyToken<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
 
+    #[account(mut)]
+    pub input_mint: Account<'info, Mint>,
+
+    #[account(mut)]
+    pub token_mint: Account<'info, Mint>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub receiver: UncheckedAccount<'info>,
+
     #[account(
         mut,
-        seeds = [POOL_SEED, bought_token_mint.key().as_ref()],
-        bump
+        seeds = [POOL_SEED, token_mint.key().as_ref()],
+        bump,
+        has_one = receiver
     )]
     pub pool_account: Account<'info, PoolAccount>,
 
@@ -27,29 +38,26 @@ pub struct BuyToken<'info> {
         init_if_needed,
         payer = buyer,
         space = UserAccount::LEN,
-        seeds = [USER_ACCOUNT_SEED, pool_account.token.key().as_ref(), buyer.key().as_ref()],
+        seeds = [USER_ACCOUNT_SEED, pool_account.key().as_ref(), buyer.key().as_ref()],
         bump
     )]
     pub buyer_account: Account<'info, UserAccount>,
 
     #[account(
-        init_if_needed,
-        payer = buyer,
-        space = TokenAccount::LEN,
-        constraint = buyer_token_account.owner == buyer.key(),
-        constraint = buyer_token_account.mint == input_mint.key()
+        mut,
+        associated_token::mint = input_mint,
+        associated_token::authority = buyer,
+        associated_token::token_program = token_program,
     )]
     pub buyer_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        associated_token::mint = pool_account.token,
-        associated_token::authority = pool_account.receiver,
+        associated_token::mint = input_mint,
+        associated_token::authority = receiver,
+        associated_token::token_program = token_program,
     )]
     pub receiver_token_account: Account<'info, TokenAccount>,
-
-    #[account(mut)]
-    pub input_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -97,12 +105,13 @@ pub fn process_buy_token(ctx: Context<BuyToken>, amount: u64) -> Result<(Pubkey,
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
+
     // Update state
     pool_account.token_sold = pool_account.token_sold.checked_add(bought_token).unwrap();
     buyer_account.bought = buyer_account.bought.checked_add(bought_token).unwrap();
     Ok((
         ctx.accounts.buyer.key(),
-        ctx.accounts.pool_account.token,
+        ctx.accounts.buyer.key(),
         amount,
     ))
 }
