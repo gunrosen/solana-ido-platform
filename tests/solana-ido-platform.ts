@@ -33,10 +33,6 @@ describe("solana-ido-platform", () => {
   before(async () => {
     await Promise.all(
       [owner.publicKey, creator.publicKey].map(async (address) => {
-        // await provider.connection.requestAirdrop(
-        //   address,
-        //   2 * 10 ** 9
-        // );
         await provider.connection.confirmTransaction(
           await provider.connection.requestAirdrop(address, 1_000 * 10 ** 9)
         );
@@ -63,7 +59,7 @@ describe("solana-ido-platform", () => {
         commitment: "confirmed",
       }
     );
-    console.log(parsedTransaction.meta.logMessages);
+    // console.log(parsedTransaction.meta.logMessages);
   });
 
   const startTime = Math.floor(moment().add(10, "seconds").valueOf() / 1000);
@@ -97,7 +93,7 @@ describe("solana-ido-platform", () => {
           .rpc();
         assert.equal("Should revert but it didnt", "");
       } catch (error) {
-        console.log(error);
+        //console.log(error);
         assert.equal(error.error.errorCode.code, "Unauthorized");
         assert.equal(error.error.errorMessage, "Unauthorized");
       }
@@ -124,34 +120,49 @@ describe("solana-ido-platform", () => {
           .rpc();
         assert.equal("Should revert but it didnt", "");
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         assert.equal(error.error.errorCode.code, "InvalidPoolTime");
       }
     });
     it("Should create pool successfully", async () => {
-      try {
-        const tx = await program.methods
-          .createPool(
-            new anchor.BN(startTime),
-            new anchor.BN(endTime),
-            new anchor.BN(claimTime),
-            new anchor.BN(tokenForSale),
-            new anchor.BN(tokenSold),
-            new anchor.BN(tokenRate),
-            tokenRateDecimals,
-            currency.publicKey,
-            token.publicKey,
-            signer.publicKey,
-            receiver.publicKey,
-          )
-          .accounts({signer: creator.publicKey})
-          .signers([creator])
-          .rpc();
-        await sleep(1);
-
-      } catch (error) {
-        console.log(error);
+      const tx = await program.methods
+        .createPool(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(claimTime),
+          new anchor.BN(tokenForSale),
+          new anchor.BN(tokenSold),
+          new anchor.BN(tokenRate),
+          tokenRateDecimals,
+          currency.publicKey,
+          token.publicKey,
+          signer.publicKey,
+          receiver.publicKey,
+        )
+        .accounts({signer: creator.publicKey})
+        .signers([creator])
+        .rpc();
+      await sleep(1);
+      const txDetails = await provider.connection.getParsedTransaction(tx, {commitment: "confirmed"});
+      const events = eventParser.parseLogs(
+        txDetails?.meta?.logMessages
+      );
+      let parsedEvents = [];
+      for (const event of events) {
+        parsedEvents.push(event);
       }
+      const poolCreatedEvent = parsedEvents.find(
+        (event) => event.name === "poolCreatedEvent"
+      );
+      assert.equal(
+        poolCreatedEvent.data.signer.toBase58(),
+        signer.publicKey.toBase58()
+      );
+      assert.equal(
+        poolCreatedEvent.data.acceptCurrency.toBase58(),
+        currency.publicKey.toBase58()
+      );
+
     });
   });
 });

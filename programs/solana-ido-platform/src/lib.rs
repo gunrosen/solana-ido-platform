@@ -35,7 +35,7 @@ pub mod solana_ido_platform {
         signer: Pubkey,
         receiver: Pubkey,
     ) -> Result<()> {
-        process_create_pool(
+        let (signer, accept_currency, mint_token) = process_create_pool(
             ctx,
             start_time,
             end_time,
@@ -48,7 +48,13 @@ pub mod solana_ido_platform {
             token,
             signer,
             receiver,
-        )
+        )?;
+        emit!(PoolCreatedEvent {
+            signer,
+            accept_currency,
+            mint: mint_token,
+        });
+        Ok(())
     }
 
     pub fn buy_token(ctx: Context<BuyToken>, amount: u64) -> Result<()> {

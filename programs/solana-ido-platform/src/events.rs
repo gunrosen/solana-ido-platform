@@ -1,6 +1,13 @@
 use anchor_lang::prelude::*;
 
 #[event]
+pub struct PoolCreatedEvent {
+    pub signer: Pubkey,
+    pub accept_currency: Pubkey,
+    pub mint: Pubkey,
+}
+
+#[event]
 pub struct BuyTokenEvent {
     pub buyer: Pubkey,
     pub token: Pubkey,

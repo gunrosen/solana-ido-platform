@@ -1,11 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::{
-    config_account::ConfigAccount,
-    pool_account::PoolAccount,
-    ErrorMessage,
-    POOL_SEED,
-    CONFIG_SEED
+    config_account::ConfigAccount, pool_account::PoolAccount, ErrorMessage, CONFIG_SEED, POOL_SEED,
 };
+use anchor_lang::prelude::*;
 #[derive(Accounts)]
 #[instruction(
     start_time: u64,
@@ -57,7 +53,7 @@ pub fn process_create_pool(
     token: Pubkey,
     signer: Pubkey,
     receiver: Pubkey,
-) -> Result<()> {
+) -> Result<(Pubkey, Pubkey, Pubkey)> {
     require!(start_time < end_time, ErrorMessage::InvalidPoolTime);
     let pool_account = &mut ctx.accounts.pool_account;
     pool_account.start_time = start_time;
@@ -71,5 +67,9 @@ pub fn process_create_pool(
     pool_account.token = token.key();
     pool_account.signer = signer.key();
     pool_account.receiver = receiver.key();
-    Ok(())
+    Ok((
+        pool_account.signer,
+        pool_account.currency,
+        pool_account.token,
+    ))
 }
