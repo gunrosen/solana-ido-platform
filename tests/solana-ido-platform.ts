@@ -85,7 +85,6 @@ describe("solana-ido-platform", () => {
       );
       const ataAccount = await provider.connection.getAccountInfo(inputMintAccount)
       if (!ataAccount) {
-        console.log("ata null, try to create ATA account")
         const createATAInstruction = createAssociatedTokenAccountInstruction(
           account.publicKey,
           inputMintAccount,
@@ -116,7 +115,7 @@ describe("solana-ido-platform", () => {
           await anchor.web3.sendAndConfirmTransaction(
             provider.connection,
             mintTransaction,
-            [account],
+            [account, owner],
             {skipPreflight: true}
           )
         } catch (e) {
