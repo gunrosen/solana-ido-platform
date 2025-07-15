@@ -11,6 +11,10 @@
 ### Step 2: buy token
 - User buy token by spending usdt
 
+### Step 3: buy with amount of token that have backend 's agreement
+- Buy instruction required 2 signer: buyer and backend
+- Buyer request backend signature then send transaction to Solana chain
+
 
 ### Note
 - We can create TokenAccount by using ATA (Associated Token Account) -> this is standard approach

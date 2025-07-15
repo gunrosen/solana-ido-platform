@@ -17,6 +17,9 @@ pub struct BuyToken<'info> {
     pub buyer: Signer<'info>,
 
     #[account(mut)]
+    pub backend: Signer<'info>,
+
+    #[account(mut)]
     pub input_mint: Account<'info, Mint>,
 
     #[account(mut)]
@@ -30,7 +33,8 @@ pub struct BuyToken<'info> {
         mut,
         seeds = [POOL_SEED, token_mint.key().as_ref()],
         bump,
-        has_one = receiver
+        has_one = receiver,
+        constraint = pool_account.signer == backend.key()
     )]
     pub pool_account: Account<'info, PoolAccount>,
 
