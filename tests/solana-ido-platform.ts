@@ -1,21 +1,48 @@
 import * as anchor from "@coral-xyz/anchor";
-import {Program} from "@coral-xyz/anchor";
+import {Program, web3} from "@coral-xyz/anchor";
 import {SolanaIdoPlatform} from "../target/types/solana_ido_platform";
 import {assert} from "chai";
 import moment from "moment";
+import nacl from 'tweetnacl';
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
   createMint,
   createMintToInstruction,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
 import * as console from "node:console";
 
 const sleep = (seconds) => {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 };
+
+/*
+Mock function for buy `amount` of token for a `buyer`.
+`signer` is a person who signs.
+ */
+const getBuySignature = async (program: any, signer: anchor.web3.Keypair, buyer: anchor.web3.PublicKey, amount: number, inputMint: anchor.web3.PublicKey, tokenMint: anchor.web3.PublicKey) => {
+  const instruction = program.methods.buyToken(
+    new anchor.BN(100),
+  ).accounts({
+    buyer: buyer,
+    inputMint: inputMint,
+    tokenMint: tokenMint,
+  }).instruction();
+
+  const provider = anchor.AnchorProvider.env();
+  const latestBlockhash = await provider.connection.getLatestBlockhash();
+  const message = new web3.Message({
+    header: {numRequiredSignatures : 2, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0},
+    accountKeys: [buyer],
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: [instruction],
+  });
+  const messageBytes = message.serialize();
+
+  return nacl.sign.detached(messageBytes, signer.secretKey)
+}
 describe("solana-ido-platform", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
