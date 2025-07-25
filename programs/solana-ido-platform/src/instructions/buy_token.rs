@@ -115,7 +115,7 @@ pub fn process_buy_token(ctx: Context<BuyToken>, amount: u64) -> Result<(Pubkey,
     buyer_account.bought = buyer_account.bought.checked_add(bought_token).unwrap();
     Ok((
         ctx.accounts.buyer.key(),
-        ctx.accounts.buyer.key(),
+        ctx.accounts.input_mint.key(),
         amount,
     ))
 }

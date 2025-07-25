@@ -3,6 +3,7 @@ import {Program} from "@coral-xyz/anchor";
 import {SolanaIdoPlatform} from "../target/types/solana_ido_platform";
 import {assert} from "chai";
 import moment from "moment";
+import { Transaction, Keypair } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
@@ -21,7 +22,7 @@ const sleep = (seconds) => {
 Mock function for buy `amount` of token for a `buyer`.
 `signer` is a person who signs.
  */
-const getBuySignature = async (program: Program<SolanaIdoPlatform>, signer: anchor.web3.Keypair, buyer: anchor.web3.PublicKey, amount: number, inputMint: anchor.web3.PublicKey, tokenMint: anchor.web3.PublicKey) => {
+const getBuySignatureVerifyFromBackend = async (program: Program<SolanaIdoPlatform>, signer: anchor.web3.Keypair, buyer: anchor.web3.PublicKey, amount: number, inputMint: anchor.web3.PublicKey, tokenMint: anchor.web3.PublicKey) => {
   const transaction = new anchor.web3.Transaction();
   const instruction = await program.methods.buyToken(
     new anchor.BN(amount),
@@ -40,6 +41,15 @@ const getBuySignature = async (program: Program<SolanaIdoPlatform>, signer: anch
   transaction.feePayer = buyer;
   transaction.partialSign(signer);
   return transaction.serialize({requireAllSignatures: false});
+}
+const frontendSignAndSendTransaction = async (signature: Buffer, buyer: anchor.web3.Keypair): Promise<string> => {
+    if (!signature){
+      throw new Error("Signature is empty");
+    }
+  const provider = anchor.AnchorProvider.env();
+  const recoveredTransaction = Transaction.from(signature);
+  recoveredTransaction.partialSign(buyer);
+  return await provider.connection.sendRawTransaction(recoveredTransaction.serialize());
 }
 describe("solana-ido-platform", () => {
   // Configure the client to use the local cluster.
@@ -181,7 +191,7 @@ describe("solana-ido-platform", () => {
 
 
   describe("Create pool", async () => {
-    it.skip("Should revert if create pool by account is not a creator", async () => {
+    it("Should revert if create pool by account is not a creator", async () => {
       try {
         await program.methods
           .createPool(
@@ -207,7 +217,7 @@ describe("solana-ido-platform", () => {
         assert.equal(error.error.errorMessage, "Unauthorized");
       }
     });
-    it.skip("Should revert if invalid time", async () => {
+    it("Should revert if invalid time", async () => {
       try {
         const wrongStartTime = endTime + 10_000;
         await program.methods
@@ -298,10 +308,34 @@ describe("solana-ido-platform", () => {
       //   .signers([creator])
       //   .rpc();
     })
-    it("Check signature", async () => {
-      const sig = await getBuySignature(program,creator,user.publicKey,100,inputMint.publicKey, tokenMint.publicKey);
-      console.log(sig)
-
+    it("Should buy token successfully with backend verify", async () => {
+      const amount = 100
+      const sig = await getBuySignatureVerifyFromBackend(program,creator,user.publicKey,amount,inputMint.publicKey, tokenMint.publicKey);
+      const tx = await frontendSignAndSendTransaction(sig, user);
+      await sleep(1);
+      const txDetails = await provider.connection.getParsedTransaction(tx, {commitment: "confirmed"});
+      const events = eventParser.parseLogs(
+        txDetails?.meta?.logMessages
+      );
+      let parsedEvents = [];
+      for (const event of events) {
+        parsedEvents.push(event);
+      }
+      const buyTokenEvent = parsedEvents.find(
+        (event) => event.name === "buyTokenEvent"
+      );
+      assert.equal(
+        buyTokenEvent.data.buyer.toBase58(),
+        user.publicKey.toBase58()
+      );
+      assert.equal(
+        buyTokenEvent.data.token.toBase58(),
+        inputMint.publicKey.toBase58()
+      );
+      assert.equal(
+        buyTokenEvent.data.amount.toString(),
+        amount
+      );
     })
     it.skip("Should buy token successfully", async () => {
 
